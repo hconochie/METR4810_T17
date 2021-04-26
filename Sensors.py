@@ -184,12 +184,12 @@ while True:
 		data_config()
 		time.sleep(1)
 		alt = read_alt_temp()
-		print "Altitude : %.2f m"%(alt['a'])
-		print "Temperature in Celsius : %.2f C"%(alt['c'])
-		print "Temperature in Fahrenheit : %.2f F"%(alt['f'])
+		print("Altitude : %.2f m"%(alt['a']))
+		print("Temperature in Celsius : %.2f C"%(alt['c']))
+		print("Temperature in Fahrenheit : %.2f F"%(alt['f']))
 		control_pres_config()
 		time.sleep(1)
 		pres = read_pres()
-		print "Pressure : %.2f kPa"%(pres['p'])
-		print " ************************************* "
+		print("Pressure : %.2f kPa"%(pres['p']))
+		print(" ************************************* ")
 		counter += 1
