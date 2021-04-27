@@ -36,8 +36,70 @@ radio.printDetails()
 
 radio.startListening()
 
-#Hunter H. Camera Init
+
+#### Start of Hunter H. Vision stuff
+class PiVideoStream:
+	def __init__(self, resolution = (1920,1080), framerate = 30):
+		self.camera = PiCamera()
+		self.camera.resolution = resolution
+		self.camera.framerate = framerate
+		self.rawCapture = PiRGBArray(self.camera, size=resolution)
+		self.stream = self.camera.capture_continuous(self.rawCapture,
+			format = "bgr", use_video_port = True)
+			
+		self.frame = None
+		self.stopped = False
+		
+	def start(self):
+		Thread(target=self.update, args=()).start()
+		return self
+		
+	def update(self):
+		#Keep looping until the thread has stopped
+		for f in self.stream:
+			self.frame = f.array
+			self.rawCapture.truncate(0)
+			
+			if self.stopped:
+				self.stream.close()
+				self.rawCapture.close()
+				self.camera.close()
+				return
+				
+	def read(self):
+		return self.frame
+		
+	def stop(self):
+		self.stopped = True
+
+
+def initialize_camera():
+	#Load the aruco marker dictionary
+	tic = time.perf_counter()
+	arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
+	arucoParams = cv2.aruco.DetectorParameters_create()
+	
+	if print_to_terminal:
+		print("[1] Loaded dictionaries")
+		if print_time_of_function:
+			toc = time.perf_counter()
+			print(f"Time to load dictionary = {toc - tic:0.4f} seconds")
+
+			
+	#Load the camera
+	tic = time.perf_counter()
+	vid_stream = PiVideoStream().start()
+	
+	if print_to_terminal:
+		print("[2] Set camera")
+		if print_time_of_function:
+			toc = time.perf_counter()
+			print(f"Time to load camera = {toc - tic:0.4f} seconds")
+			
+	return arucoDict,arucoParams,vid_stream
+			
 arucoDict, arucoParams, vid_stream = initialize_camera()
+
 #Print data for controlling timing
 print_to_terminal = False
 #requires print_to_terminal
@@ -103,68 +165,7 @@ def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
     print("send data to master")
     radio.startListening()
 
-#### Start of Hunter H. Vision stuff
-class PiVideoStream:
-	def __init__(self, resolution = (1920,1080), framerate = 30):
-		self.camera = PiCamera()
-		self.camera.resolution = resolution
-		self.camera.framerate = framerate
-		self.rawCapture = PiRGBArray(self.camera, size=resolution)
-		self.stream = self.camera.capture_continuous(self.rawCapture,
-			format = "bgr", use_video_port = True)
-			
-		self.frame = None
-		self.stopped = False
-		
-	def start(self):
-		Thread(target=self.update, args=()).start()
-		return self
-		
-	def update(self):
-		#Keep looping until the thread has stopped
-		for f in self.stream:
-			self.frame = f.array
-			self.rawCapture.truncate(0)
-			
-			if self.stopped:
-				self.stream.close()
-				self.rawCapture.close()
-				self.camera.close()
-				return
-				
-	def read(self):
-		return self.frame
-		
-	def stop(self):
-		self.stopped = True
-
-
-def initialize_camera():
-	#Load the aruco marker dictionary
-	tic = time.perf_counter()
-	arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
-	arucoParams = cv2.aruco.DetectorParameters_create()
-	
-	if print_to_terminal:
-		print("[1] Loaded dictionaries")
-		if print_time_of_function:
-			toc = time.perf_counter()
-			print(f"Time to load dictionary = {toc - tic:0.4f} seconds")
-
-			
-	#Load the camera
-	tic = time.perf_counter()
-	vid_stream = PiVideoStream().start()
-	
-	if print_to_terminal:
-		print("[2] Set camera")
-		if print_time_of_function:
-			toc = time.perf_counter()
-			print(f"Time to load camera = {toc - tic:0.4f} seconds")
-			
-	return arucoDict,arucoParams,vid_stream
-			
-
+### Vision
 def capture_image(arucoDict,arucoParams, vid_stream):
 	#Capture an image
 	tic = time.perf_counter()
