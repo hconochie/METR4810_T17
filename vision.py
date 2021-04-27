@@ -101,8 +101,8 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	
 	frame_num = 1
 	no_marker = True
-	x_out = 0
-	y_out = 0
+	x_out = 0.5
+	y_out = 0.5
 	
 	while (frame_num <= max_frames) and (no_marker):		
 		#detect ArUco markers in the input frame
@@ -146,6 +146,23 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 		print(f"Time to Detect markers = {toc - tic:0.4f} seconds")
 	return (x_out, y_out)
 	
+	
+def show_image(direction, vid_stream):
+	w = 480
+	h = 360
+	frame = vid_stream.read()
+	frame = cv2.resize(frame, (w,h))
+
+	(x,y) = direction
+	start = (int(w/2), int(h/2))
+	end = (int(w*x),int(h*y))
+	cv2.line(frame, start, end, (255,255,255), 2)
+	
+	cv2.imshow("Frame", frame)
+	key = cv2.waitKey(1) & 0xFF
+
+
+	
 
 
 arucoDict, arucoParams, vid_stream = initialize_camera()
@@ -158,6 +175,9 @@ total_frames = 100000
 while i <= total_frames:
 	direction = capture_image(arucoDict,arucoParams, vid_stream)
 	print(direction)
+	
+	#show_image(direction, vid_stream)
+	
 	i += 1
 	
 vid_stream.stop()
