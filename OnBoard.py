@@ -124,7 +124,7 @@ class PiVideoStream:
 		#Keep looping until the thread has stopped
 		for f in self.stream:
   	          self.frame = f.array
- 	           self.rawCapture.truncate(0)
+ 	          self.rawCapture.truncate(0)
 			
 	            if self.stopped:
    	             self.stream.close()
