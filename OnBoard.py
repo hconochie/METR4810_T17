@@ -11,7 +11,6 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 from threading import Thread
 import imutils
-import time
 import cv2
 import sys
 
@@ -39,7 +38,6 @@ radio.startListening()
 
 #Hunter H. Camera Init
 arucoDict, arucoParams, vid_stream = initialize_camera()
-
 #Print data for controlling timing
 print_to_terminal = False
 #requires print_to_terminal
