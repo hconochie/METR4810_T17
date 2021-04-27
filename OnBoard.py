@@ -111,57 +111,59 @@ class PiVideoStream:
 		self.camera.framerate = framerate
 		self.rawCapture = PiRGBArray(self.camera, size=resolution)
 		self.stream = self.camera.capture_continuous(self.rawCapture,
-							     format = "bgr", use_video_port = True)
+			format = "bgr", use_video_port = True)
+			
+		self.frame = None
+		self.stopped = False
 		
-	self.frame = None
-	self.stopped = False
-	
 	def start(self):
 		Thread(target=self.update, args=()).start()
 		return self
-    	
+		
 	def update(self):
 		#Keep looping until the thread has stopped
 		for f in self.stream:
-  	          self.frame = f.array
- 	          self.rawCapture.truncate(0)
+			self.frame = f.array
+			self.rawCapture.truncate(0)
 			
-	            if self.stopped:
-   	             self.stream.close()
-			self.rawCapture.close()
-			self.camera.close()
-			return
+			if self.stopped:
+				self.stream.close()
+				self.rawCapture.close()
+				self.camera.close()
+				return
 				
- 	def read(self):
+	def read(self):
 		return self.frame
 		
-    	def stop(self):
+	def stop(self):
 		self.stopped = True
 
-	def initialize_camera():
-		#Load the aruco marker dictionary
-		tic = time.perf_counter()
-		arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
-		arucoParams = cv2.aruco.DetectorParameters_create()
+
+def initialize_camera():
+	#Load the aruco marker dictionary
+	tic = time.perf_counter()
+	arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
+	arucoParams = cv2.aruco.DetectorParameters_create()
 	
-		if print_to_terminal:
-			print("[1] Loaded dictionaries")
-			if print_time_of_function:
-				toc = time.perf_counter()
-				print(f"Time to load dictionary = {toc - tic:0.4f} seconds")
+	if print_to_terminal:
+		print("[1] Loaded dictionaries")
+		if print_time_of_function:
+			toc = time.perf_counter()
+			print(f"Time to load dictionary = {toc - tic:0.4f} seconds")
 
 			
-		#Load the camera
-		tic = time.perf_counter()
-		vid_stream = PiVideoStream().start()
+	#Load the camera
+	tic = time.perf_counter()
+	vid_stream = PiVideoStream().start()
 	
-		if print_to_terminal:
-			print("[2] Set camera")
-			if print_time_of_function:
-				toc = time.perf_counter()
-				print(f"Time to load camera = {toc - tic:0.4f} seconds")
+	if print_to_terminal:
+		print("[2] Set camera")
+		if print_time_of_function:
+			toc = time.perf_counter()
+			print(f"Time to load camera = {toc - tic:0.4f} seconds")
 			
-		return arucoDict,arucoParams,vid_stream
+	return arucoDict,arucoParams,vid_stream
+			
 
 def capture_image(arucoDict,arucoParams, vid_stream):
 	#Capture an image
@@ -231,9 +233,9 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 		toc = time.perf_counter()
 		print(f"Time to Detect markers = {toc - tic:0.4f} seconds")
 	return (x_out, y_out)
-
+	
+	
 def show_image(direction, vid_stream):
-    ### A Diagnostic tool to show camera image
 	w = 480
 	h = 360
 	frame = vid_stream.read()
