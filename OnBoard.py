@@ -97,73 +97,7 @@ def initialize_camera():
 			print(f"Time to load camera = {toc - tic:0.4f} seconds")
 			
 	return arucoDict,arucoParams,vid_stream
-			
-arucoDict, arucoParams, vid_stream = initialize_camera()
 
-#Print data for controlling timing
-print_to_terminal = False
-#requires print_to_terminal
-print_time_of_function = False
-
-
-def getTemp(k):
-    temp = [10, 15, 18, 25, 12, 6, 30]
-    return str(temp[k])
-
-def getPressure(k):
-    pressure = [1, 2, 1.5, 1, 1, 2, 1.5]
-    return str(pressure[k])
-
-def getAccel(k):
-    accel = [0, 0.1, 0.3, 0.4, 0.1, 0.2, 0.5]
-    return str(accel[k])
-
-def getDelta(k):
-    delta = [[1  ,  2,  1],
-             [0.1,  1,  1],
-             [0  ,  0,  0],
-             [1  ,  1,0.3],
-             [0.2,0.1,0.2],
-             [0  ,0.9,  2],
-             [1  ,  2,0.4]]
-    return delta[k]
-
-def getOrien(k):
-    orientation = [[100,120,100],
-                   [105, 90, 15],
-                   [ 10, 90, 20],
-                   [270, 80, 20],
-                   [200,175, 60],
-                   [ 30, 30, 35],
-                   [102, 30, 25]]
-    return orientation[k]
-
-def sendData(tempID, temp, pressureID, pressure, accelID, accel):
-    radio.stopListening()
-    time.sleep(0.25)
-    message = list(tempID) + list(temp)+ list(pressureID) + list(pressure) + list(accelID) + list(accel)
-    print("About to send message")
-    radio.write(message)
-    print("send data to master")
-    radio.startListening()
-
-def sendPos(delta_xID, delta_x, delta_yID, delta_y, delta_zID, delta_z):
-    radio.stopListening()
-    time.sleep(0.25)
-    message = list(delta_xID) + list(delta_x) + list(delta_yID) + list(delta_y) + list(delta_zID) + list(delta_z)
-    print("About to send message")
-    radio.write(message)
-    print("send data to master")
-    radio.startListening()
-
-def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
-    radio.stopListening()
-    time.sleep(0.25)
-    message =list(rollID) + list(roll) + list(pitchID) + list(pitch) + list(yawID) + list(yaw)
-    print("About to send message")
-    radio.write(message)
-    print("send data to master")
-    radio.startListening()
 
 ### Vision
 def capture_image(arucoDict,arucoParams, vid_stream):
@@ -249,7 +183,73 @@ def show_image(direction, vid_stream):
 	
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
-### End of Hunter H. Vision vision stuff
+
+#Print data for controlling timing
+print_to_terminal = False
+#requires print_to_terminal
+print_time_of_function = False
+
+arucoDict, arucoParams, vid_stream = initialize_camera()
+
+
+def getTemp(k):
+    temp = [10, 15, 18, 25, 12, 6, 30]
+    return str(temp[k])
+
+def getPressure(k):
+    pressure = [1, 2, 1.5, 1, 1, 2, 1.5]
+    return str(pressure[k])
+
+def getAccel(k):
+    accel = [0, 0.1, 0.3, 0.4, 0.1, 0.2, 0.5]
+    return str(accel[k])
+
+def getDelta(k):
+    delta = [[1  ,  2,  1],
+             [0.1,  1,  1],
+             [0  ,  0,  0],
+             [1  ,  1,0.3],
+             [0.2,0.1,0.2],
+             [0  ,0.9,  2],
+             [1  ,  2,0.4]]
+    return delta[k]
+
+def getOrien(k):
+    orientation = [[100,120,100],
+                   [105, 90, 15],
+                   [ 10, 90, 20],
+                   [270, 80, 20],
+                   [200,175, 60],
+                   [ 30, 30, 35],
+                   [102, 30, 25]]
+    return orientation[k]
+
+def sendData(tempID, temp, pressureID, pressure, accelID, accel):
+    radio.stopListening()
+    time.sleep(0.25)
+    message = list(tempID) + list(temp)+ list(pressureID) + list(pressure) + list(accelID) + list(accel)
+    print("About to send message")
+    radio.write(message)
+    print("send data to master")
+    radio.startListening()
+
+def sendPos(delta_xID, delta_x, delta_yID, delta_y, delta_zID, delta_z):
+    radio.stopListening()
+    time.sleep(0.25)
+    message = list(delta_xID) + list(delta_x) + list(delta_yID) + list(delta_y) + list(delta_zID) + list(delta_z)
+    print("About to send message")
+    radio.write(message)
+    print("send data to master")
+    radio.startListening()
+
+def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
+    radio.stopListening()
+    time.sleep(0.25)
+    message =list(rollID) + list(roll) + list(pitchID) + list(pitch) + list(yawID) + list(yaw)
+    print("About to send message")
+    radio.write(message)
+    print("send data to master")
+    radio.startListening()
 
 
 while True:
