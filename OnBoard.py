@@ -347,12 +347,12 @@ def getTemp():
     control_alt_config()
     data_config()
     alt = read_alt_temp()
-    return str(alt['c']) ## returns degrees celcius
+    return str(round(np.float16(alt['c']),2)) ## returns degrees celcius
 
 def getPressure():
     control_pres_config()
-    pressure = read_pres()
-    return str(pressure['p'])
+    pressure = (read_pres())
+    return str(round(np.float16(pressure['p']),2))
 
 def getAccel():
     #Read Accelerometer raw value
@@ -361,9 +361,9 @@ def getAccel():
     acc_z = read_raw_data(ACCEL_ZOUT_H)
 
     #Full scale range +/- 250 degree/C as per sensitivity scale factor
-    Ax = acc_x/16384.0
-    Ay = acc_y/16384.0
-    Az = acc_z/16384.0
+    Ax = round(np.float16(acc_x/16384.0),2)
+    Ay = round(np.float16(acc_y/16384.0),2)
+    Az = round(np.float16(acc_z/16384.0),2)
 
     return str(Ax), str(Ay), str(Az)
 
@@ -390,10 +390,21 @@ def getOrien():
     orientation = [Gx, Gy, Gz]
     return orientation
 
-def sendData(tempID, temp, pressureID, pressure, accelID, accel):
+def sendData(tempID, temp, pressureID, pressure):
     radio.stopListening()
     time.sleep(0.25)
-    message = list(tempID) + list(temp)+ list(pressureID) + list(pressure) + list(accelID) + list(accel)
+    message = list(tempID) + list(temp)+ list(pressureID) + list(pressure)
+    print("About to send message")
+    print("message: ", message)
+    radio.write(message)
+    print("send data to master")
+    radio.startListening()
+
+
+def sendAccel(axID, ax, ayID, ay, azID, az):
+    radio.stopListening()
+    time.sleep(0.25)
+    message = list(axID) + list(ax) + list(ayID) + list(ay) + list(azID) + list(az)
     print("About to send message")
     radio.write(message)
     print("send data to master")
@@ -451,13 +462,18 @@ while True:
     if command == "GET_DATA":
         print("We should get the DATA!")
         k = random.randint(0, 6)
-        tempID = "temp_"
+        tempID = "t_"
         temp = getTemp()
-        pressureID = "_pressure_"
+        pressureID = "_p_"
         pressure = getPressure()
-        accelID = "_accel_"
-        accel = getAccel()
-        sendData(tempID, temp, pressureID, pressure, accelID, accel)
+        sendData(tempID, temp, pressureID, pressure)
+
+    if command == "GET_ACC":
+        xacc, yacc, zacc = getAccel()
+        axID = "ax_"
+        ayID = "_ay_"
+        azID = "_az_"
+        sendAccel(axID, xacc, ayID, yacc, azID,  zacc)
     
     if command == "GET_POS":
         print("We should get the POSITION!")
