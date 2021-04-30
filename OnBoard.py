@@ -13,6 +13,7 @@ from threading import Thread
 import imutils
 import cv2
 import sys
+import numpy as np
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
@@ -167,7 +168,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	if print_time_of_function:
 		toc = time.perf_counter()
 		print(f"Time to Detect markers = {toc - tic:0.4f} seconds")
-	return (x_out, y_out)
+	return x_out, y_out
 	
 	
 def show_image(direction, vid_stream):
@@ -242,6 +243,7 @@ def sendPos(delta_xID, delta_x, delta_yID, delta_y, delta_zID, delta_z):
     print("send data to master")
     radio.startListening()
 
+
 def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
     radio.stopListening()
     time.sleep(0.25)
@@ -251,6 +253,14 @@ def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
     print("send data to master")
     radio.startListening()
 
+def sendLook(xPosID, xPos, yPosID, ypos):
+    radio.stopListening()
+    time.sleep(0.25)
+    message = list(xPosID) + list(xPos) + list(yPosID) + list(yPos)
+    print("About to send message")
+    radio.write(message)
+    print("send data to master")
+    radio.startListening()
 
 while True:
     ackPL = [1]
@@ -321,8 +331,13 @@ while True:
         GPIO.output(18, GPIO.LOW)
 
     if command == "LOOK":
-        direction = capture_image(arucoDict,arucoParams, vid_stream)
+        x, y  = capture_image(arucoDict,arucoParams, vid_stream)
+        xPos = str(np.float16(x))
+        yPos = str(np.float16(y))
         #show_image(direction, vid_stream)
+        xPosID = "xPos_"
+        yPosID = "_yPos_"
+        sendLook(xPosID, xPos, yPosID, yPos)
 
     command = ""
 
