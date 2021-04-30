@@ -61,6 +61,11 @@ pwm_2.start(0)
 pwm_3.start(0)
 pwm_4.start(0)
 
+check = 0
+def check():
+    check = 1
+    #Rotate 
+
 def land():
     """SetAngle(pwm_1,2,70)
     SetAngle(pwm_2,3,70)
@@ -71,18 +76,24 @@ def land():
     #rotate
     
     #throttle
-    
-    while(1):
-        vis_x, vis_y = getVision()
-        print(vis_x)
-        print(vis_y)
-        #moveX(vis_x)
-        #home(4,pwm_3)
-        #moveY(vis_y)
-        #home(18,pwm_4)
-        #loop here
-        #check hunters code
-        #move servos
+    vis_x, vis_y = getVision()
+    #Get data
+    temp, pressure= getData()
+    ax,ay,az = getAcc()
+    #plot data
+    print((vis_x,vis_y))
+    print(temp)
+    print(pressure)
+    print((ax,ay,az))
+        
+    #moveX(vis_x)
+    #home(4,pwm_3)
+    #moveY(vis_y)
+    #home(18,pwm_4)
+    #loop here
+    #check hunters code
+    #move servos
+    sleep(0.1)
 
 def abort():
     GPIO.output(23, GPIO.HIGH)
@@ -118,9 +129,31 @@ def receiveData():
     print("Our slave sent us: {}".format(string))
 
     # parse message
-    tempID, temp, pressureID, pressure, accelID, accel = string.split('_')
+    tempID, temp, pressureID, pressure = string.split('_')
     radio.stopListening()
-    return temp, pressure, accel
+    return temp, pressure
+
+def receiveAcc():
+    print("Ready to recieve data.")
+    radio.startListening()
+
+    while not radio.available(0):
+        #print("radio not available")
+        time.sleep(1/100)
+    receivedMessage = []
+    radio.read(receivedMessage, radio.getDynamicPayloadSize())
+
+    print("Translating receivedMessage into unicode characters...")
+    string = ""
+    for n in receivedMessage:
+        if (n >= 32 and n <= 126):
+                string += chr(n)
+    print("Our slave sent us: {}".format(string))
+
+    # parse message
+    axID, ax, ayID, ay, azID, az = string.split('_')
+    radio.stopListening()
+    return ax, ay, az
 
 def receivePos():
     print("Ready to recieve data.")
@@ -199,14 +232,33 @@ def getData():
         returnedPL = []
         returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
         print("Our returned payload was {}".format(returnedPL))
-        temp, pressure, accel = receiveData()
+        temp, pressure= receiveData()
     else:
         print("No Payload was received")
         temp = 0
         pressure = 0
-        accel = 0
-    print("temperature is: ", temp," pressure is: ", pressure, " accleration is: ", accel)
-    return temp, pressure, accel
+    print("temperature is: ", temp," pressure is: ", pressure)
+    return temp, pressure
+
+def getAcc():
+    # GET ACCELERATION
+    command = "GET_ACC"
+    message = list(command)
+    radio.write(message)
+    print("We sent the message of {}".format(message))
+    # check for ack payload
+    if radio.isAckPayloadAvailable():
+        returnedPL = []
+        returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
+        print("Our returned payload was {}".format(returnedPL))
+        ax,ay,az = receiveAcc()
+    else:
+        print("No Payload was received")
+        ax = 0
+        ay = 0
+        az = 0
+    print("aX: ", ax," aY: ", ay, " aZ: ", az)
+    return ax,ay,az
 
 
 def getPos():
@@ -325,32 +377,33 @@ yar8 = []
 yar9 = []
 
 style.use('ggplot')
-print(plt.style.available)
+# print(plt.style.available)
 fig = plt.figure(figsize=(8, 16), dpi=80)
-ax1 = fig.add_subplot(5,1,1)
+ax1 = fig.add_subplot(3,1,1)
 ax1.set_ylim(0, 50)
 line1, = ax1.plot(xar, yar, 'r', marker='o')
 #ax1.set_xlabel('Time (seconds)')
 ax1.set_ylabel('Temperature (C)', **axes_font)
 ax1.set_title('Temperature Plot', **title_font)
 
-ax2 = fig.add_subplot(5,1,2)
-ax2.set_ylim(0, 4)
+ax2 = fig.add_subplot(3,1,2)
+ax2.set_ylim(0, 200)
 line2, = ax2.plot(xar, yar2, 'r', marker='o')
 ax2.set_ylabel('Pressure (MPa)', **axes_font)
 ax2.set_title('Pressure Plot', **title_font)
 
-ax3 = fig.add_subplot(5,1,3)
-ax3.set_ylim(0, 2)
+ax3 = fig.add_subplot(3,1,3)
+ax3.set_ylim(-1, 1)
 line3, = ax3.plot(xar, yar3, 'r', marker='o')
+line4, = ax3.plot(xar, yar4, 'g', marker='o')
+line5, = ax3.plot(xar, yar5, 'b', marker='o')
 ax3.set_ylabel("Acceleration (m/s^2)", **axes_font)
 ax3.set_title("Acceleration Plot", **title_font)
+ax3.legend("xyz", loc="upper left")
 
-
+"""
 ax4 = fig.add_subplot(5,1,4)
-ax4.set_ylim(0, 3)
-line4, = ax4.plot(xar, yar4, 'r', marker='o')
-line5, = ax4.plot(xar, yar5, 'g', marker='o')
+ax4.set_ylim(-1, 1)
 line6, = ax4.plot(xar, yar6, 'b', marker='o')
 ax4.set_ylabel("Change in position from launch (m)", **axes_font)
 ax4.set_title("Position Plot", **title_font)
@@ -364,38 +417,49 @@ line9, = ax5.plot(xar, yar9, 'b', marker='o')
 ax5.set_ylabel("Orientation (degrees from neurtral)", **axes_font)
 ax5.set_title("Orientation Plot", **title_font)
 ax5.legend("rpy", loc="upper left")
+"""
 
 plt.tight_layout(pad=3.0)
 
 def animate(i):
-    temp, pressure, accel = getData()
-    delta_x, delta_y, delta_z = getPos()
-    roll, pitch, yaw = getOdom()
+    temp, pressure= getData()
+    ax,ay,az = getAcc()
+    #delta_x, delta_y, delta_z = getPos()
+    #roll, pitch, yaw = getOdom()
     # append temperature
     yar.append(temp)
     yar2.append(pressure)
-    yar3.append(accel)
-    yar4.append(delta_x)
-    yar5.append(delta_y)
-    yar6.append(delta_z)
-    yar7.append(roll)
-    yar8.append(pitch)
-    yar9.append(yaw)
+    
+    yar3.append(ax)
+    print(yar3)
+    yar4.append(ay)
+    print(yar4)
+    yar5.append(az)
+    print(yar5)
+    #yar6.append(delta_z)
+    #yar7.append(roll)
+    #yar8.append(pitch)
+    #yar9.append(yaw)
+    
     xar.append(i)
+    print(xar)
     line1.set_data(xar, yar)
+    print("line 1", line1)
     line2.set_data(xar, yar2)
     line3.set_data(xar, yar3)
     line4.set_data(xar, yar4)
     line5.set_data(xar, yar5)
+    """
     line6.set_data(xar, yar6)
     line7.set_data(xar, yar7)
     line8.set_data(xar, yar8)
     line9.set_data(xar, yar9)
+    """
     ax1.set_xlim(0, i+1)
     ax2.set_xlim(0, i+1)
     ax3.set_xlim(0, i+1)
-    ax4.set_xlim(0, i+1)
-    ax5.set_xlim(0, i+1)
+    #ax4.set_xlim(0, i+1)
+    #ax5.set_xlim(0, i+1)
 
 topFrame = tk.Frame(root)
 topFrame.pack(side = tk.TOP)
@@ -407,7 +471,7 @@ plotcanvas = FigureCanvasTkAgg(fig, root)
 landButton.pack(side = tk.LEFT)
 abortButton.pack(side= tk.RIGHT)
 plotcanvas.get_tk_widget().pack()
-#ani = animation.FuncAnimation(fig, animate, interval=1000, blit=False)
+ani = animation.FuncAnimation(fig, animate, interval=1000, blit=False)
 root.mainloop()
 
 pwm_1.stop()
