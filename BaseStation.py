@@ -9,6 +9,8 @@ from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from time import sleep
+
 
 title_font = {'family' : 'normal',
         'weight' : 'bold',
@@ -21,9 +23,12 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
+#GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(17, GPIO.OUT, initial=GPIO.LOW)
 pipes = [[0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]]
+
+
+
 
 radio = NRF24(GPIO, spidev.SpiDev())
 radio.begin(0, 17)
@@ -40,21 +45,44 @@ radio.openReadingPipe(1, pipes[0])
 radio.openWritingPipe(pipes[1])
 radio.printDetails()
 
+#Servo setup
+GPIO.setup(2,GPIO.OUT) 
+GPIO.setup(3,GPIO.OUT) 
+GPIO.setup(4,GPIO.OUT)
+GPIO.setup(18,GPIO.OUT) 
+
+pwm_1 = GPIO.PWM(2,50)
+pwm_2 = GPIO.PWM(3,50)
+pwm_3 = GPIO.PWM(4,50)
+pwm_4 = GPIO.PWM(18,50)
+
+pwm_1.start(0)
+pwm_2.start(0)
+pwm_3.start(0)
+pwm_4.start(0)
+
 def land():
-    GPIO.output(18, GPIO.HIGH)
-    time.sleep(1)
-    GPIO.output(18, GPIO.LOW)
+    """SetAngle(pwm_1,2,70)
+    SetAngle(pwm_2,3,70)
+    SetAngle(pwm_3,4,70)
+    SetAngle(pwm_4,18,70)"""
     
-    # Send abort command
-    command = "LAND"
-    message = list(command)
-    radio.write(message)
-    print("We sent the message of {}".format(message))
-    # check for ack payload
-    if radio.isAckPayloadAvailable():
-        returnedPL = []
-        returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
-        print("Our returned payload was {}".format(returnedPL))
+
+    #rotate
+    
+    #throttle
+    
+    while(1):
+        vis_x, vis_y = getVision()
+        print(vis_x)
+        print(vis_y)
+        #moveX(vis_x)
+        #home(4,pwm_3)
+        #moveY(vis_y)
+        #home(18,pwm_4)
+        #loop here
+        #check hunters code
+        #move servos
 
 def abort():
     GPIO.output(23, GPIO.HIGH)
@@ -138,6 +166,28 @@ def receiveOdom():
     radio.stopListening()
     return roll, pitch, yaw
 
+def receiveVision():
+    print("Ready to recieve data.")
+    radio.startListening()
+
+    while not radio.available(0):
+        #print("radio not available")
+        time.sleep(1/100)
+    receivedMessage = []
+    radio.read(receivedMessage, radio.getDynamicPayloadSize())
+
+    print("Translating receivedMessage into unicode characters...")
+    string = ""
+    for n in receivedMessage:
+        if (n >= 32 and n <= 126):
+                string += chr(n)
+    print("Our slave sent us: {}".format(string))
+
+    # parse message
+    a,vis_x,b, vis_y = string.split('_')
+    radio.stopListening()
+    return vis_x, vis_y
+
 def getData():
     # GET DATA
     command = "GET_DATA"
@@ -198,6 +248,65 @@ def getOdom():
         yaw = 0
     print("roll: ", roll, " pitch: ", pitch, " yaw: ", yaw)
     return roll, pitch, yaw
+
+def getVision():
+    # GET ODOMETRY
+    command = "LOOK"
+    message = list(command)
+    radio.write(message)
+    print("We sent the message of {}".format(message))
+    # check for ack payload
+    if radio.isAckPayloadAvailable():
+        returnedPL = []
+        returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
+        print("Our returned payload was {}".format(returnedPL))
+        vis_x, vis_y = receiveVision()
+    else:
+        print("No Payload was received")
+        vis_x = 0
+        vis_y = 0
+    print("vis_x: ", vis_x, " vis_y: ", vis_y)
+    return vis_x, vis_y
+
+#SERVO FUNCTIONS
+def SetAngle(pwm,pin,angle):
+    duty_cycle = angle/18 +2
+    GPIO.output(pin,True)
+    pwm.ChangeDutyCycle(duty_cycle)
+    sleep(1)
+    GPIO.output(pin,False)
+    pwm.ChangeDutyCycle(0)
+    
+def moveX(transX):
+    #X and Y are highest pixel counts given by hunters code
+    if 0.1 <= transX <= 1 :
+        angle = 70+transX*50
+        duty_cycle = angle/18 + 2
+        GPIO.output(4,True)
+        pwm_3.ChangeDutyCycle(duty_cycle)
+        sleep(0.5)
+        GPIO.output(4,False)
+        pwm_3.ChangeDutyCycle(0)
+    
+
+def moveY(transY):
+    #X and Y are highest pixel counts given by hunters code
+    if 0.1 <= transY <= 1:
+        angle = 70+transY*50
+        duty_cycle = angle/18 + 2
+        GPIO.output(18,True)
+        pwm_3.ChangeDutyCycle(duty_cycle)
+        sleep(0.5)
+        GPIO.output(18,False)
+        pwm_3.ChangeDutyCycle(0)
+
+def home(pin,pwm):
+    duty_cycle = 90/18 +2
+    GPIO.output(pin,True)
+    pwm.ChangeDutyCycle(duty_cycle)
+    sleep(1)
+    GPIO.output(pin,False)
+    pwm.ChangeDutyCycle(0)
 
 # ============ GUI =========
 root = tk.Tk()
@@ -298,5 +407,11 @@ plotcanvas = FigureCanvasTkAgg(fig, root)
 landButton.pack(side = tk.LEFT)
 abortButton.pack(side= tk.RIGHT)
 plotcanvas.get_tk_widget().pack()
-ani = animation.FuncAnimation(fig, animate, interval=1000, blit=False)
+#ani = animation.FuncAnimation(fig, animate, interval=1000, blit=False)
 root.mainloop()
+
+pwm_1.stop()
+pwm_2.stop()
+pwm_3.stop()
+pwm_4.stop()
+GPIO.cleanup()
