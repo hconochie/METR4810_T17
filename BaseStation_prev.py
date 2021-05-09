@@ -61,33 +61,37 @@ pwm_2.start(0)
 pwm_3.start(0)
 pwm_4.start(0)
 
-def drop():
-    # Trust up
-    SetAngle(pwm_1,2,70)
-    sleep(1)
-    # Turn
-    SetAngle(pwm_2,3,70)
-    SetAngle(pwm_2,3,90)
+check = 0
+def check():
+    check = 1
+    #Rotate 
 
 def land():
-    SetAngle(pwm_1,2,90)
-    SetAngle(pwm_2,3,90)
-    SetAngle(pwm_3,4,90)
-    SetAngle(pwm_4,18,90)
-    #vis_x,vis_y = getVision()
-    #vis_x = float(vis_x)
-    #vis_y = float(vis_y)
-    #tx = int(vis_x*40 + 70)
-    #ty = int(vis_y*40 + 70)
-    #print(tx,ty)
-    #if not 82 < tx < 93:
-    #    SetAngle(pwm_3,4,tx)
-    #    SetAngle(pwm_3,4,90)
-    #if not 82 < ty < 93:
-    #    SetAngle(pwm_4,18,ty)
-    #    SetAngle(pwm_4,18,90)
 
+    #SetAngle(pwm_1,2,90)
+    vis_x,vis_y = getVision()
+    tx = int(vis_x*40 + 90)
+    ty = int(vis_y*40 + 90)
+    if 85 < tx < 95:
+        tx = 90
+    if 85 < tx < 95:
+        tx = 90
+    SetAngle(pwm_3,4,tx)
+    SetAngle(pwm_4,18,ty)
+    #SetAngle(pwm_2,3,90)
+    #SetAngle(pwm_3,4,90)
+    #SetAngle(pwm_4,18,90)
     
+    
+        
+    #moveX(vis_x)
+    #home(4,pwm_3)
+    #moveY(vis_y)
+    #home(18,pwm_4)
+    #loop here
+    #check hunters code
+    #move servos
+    sleep(0.1)
 
 def abort():
     GPIO.output(23, GPIO.HIGH)
@@ -148,6 +152,28 @@ def receiveAcc():
     axID, ax, ayID, ay, azID, az = string.split('_')
     radio.stopListening()
     return ax, ay, az
+
+def receivePos():
+    print("Ready to recieve data.")
+    radio.startListening()
+
+    while not radio.available(0):
+        #print("radio not available")
+        time.sleep(1/100)
+    receivedMessage = []
+    radio.read(receivedMessage, radio.getDynamicPayloadSize())
+
+    print("Translating receivedMessage into unicode characters...")
+    string = ""
+    for n in receivedMessage:
+        if (n >= 32 and n <= 126):
+                string += chr(n)
+    print("Our slave sent us: {}".format(string))
+
+    # parse message
+    delta_xID, delta_x, delta_yID, delta_y, delta_zID, delta_z = string.split('_')
+    radio.stopListening()
+    return delta_x, delta_y, delta_z
 
 def receiveOdom():
     print("Ready to recieve data.")
@@ -232,6 +258,27 @@ def getAcc():
     print("aX: ", ax," aY: ", ay, " aZ: ", az)
     return ax,ay,az
 
+
+def getPos():
+    # GET POSITION
+    command = "GET_POS"
+    message = list(command)
+    radio.write(message)
+    print("We sent the message of {}".format(message))
+    # check for ack payload
+    if radio.isAckPayloadAvailable():
+        returnedPL = []
+        returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
+        print("Our returned payload was {}".format(returnedPL))
+        delta_x, delta_y, delta_z = receivePos()
+    else:
+        print("No Payload was received")
+        delta_x = 0
+        delta_y = 0
+        delta_z = 0
+    print("change in x: ", delta_x, " change in y: ", delta_y, " change in z: ", delta_z)
+    return delta_x, delta_y, delta_z
+
 def getOdom():
     # GET ODOMETRY
     command = "GET_ODOM"
@@ -276,12 +323,41 @@ def SetAngle(pwm,pin,angle):
     duty_cycle = angle/18 +2
     GPIO.output(pin,True)
     pwm.ChangeDutyCycle(duty_cycle)
-    sleep(0.5)
+    sleep(0.2)
+    GPIO.output(pin,False)
+    pwm.ChangeDutyCycle(0)
+    
+def moveX(transX):
+    #X and Y are highest pixel counts given by hunters code
+    if 0.1 <= transX <= 1 :
+        angle = 70+transX*50
+        duty_cycle = angle/18 + 2
+        GPIO.output(4,True)
+        pwm_3.ChangeDutyCycle(duty_cycle)
+        sleep(0.5)
+        GPIO.output(4,False)
+        pwm_3.ChangeDutyCycle(0)
+    
+
+def moveY(transY):
+    #X and Y are highest pixel counts given by hunters code
+    if 0.1 <= transY <= 1:
+        angle = 70+transY*50
+        duty_cycle = angle/18 + 2
+        GPIO.output(18,True)
+        pwm_3.ChangeDutyCycle(duty_cycle)
+        sleep(0.5)
+        GPIO.output(18,False)
+        pwm_3.ChangeDutyCycle(0)
+
+def home(pin,pwm):
+    duty_cycle = 90/18 +2
+    GPIO.output(pin,True)
+    pwm.ChangeDutyCycle(duty_cycle)
+    sleep(1)
     GPIO.output(pin,False)
     pwm.ChangeDutyCycle(0)
 
-    
-    
 # ============ GUI =========
 root = tk.Tk()
 root.title('METR4810 Mission Control GUI')
@@ -324,27 +400,32 @@ ax3.set_title("Acceleration Plot", **title_font)
 ax3.legend("xyz", loc="upper left")
 
 """
-ax4 = fig.add_subplot(4,1,4)
+ax4 = fig.add_subplot(5,1,4)
 ax4.set_ylim(-1, 1)
 line6, = ax4.plot(xar, yar6, 'b', marker='o')
 ax4.set_ylabel("Change in position from launch (m)", **axes_font)
 ax4.set_title("Position Plot", **title_font)
 ax4.legend("xyz", loc="upper left")
+
+ax5 = fig.add_subplot(5,1,5)
+ax5.set_ylim(0, 360)
+line7, = ax5.plot(xar, yar7, 'r', marker='o')
+line8, = ax5.plot(xar, yar8, 'g', marker='o')
+line9, = ax5.plot(xar, yar9, 'b', marker='o')
+ax5.set_ylabel("Orientation (degrees from neurtral)", **axes_font)
+ax5.set_title("Orientation Plot", **title_font)
+ax5.legend("rpy", loc="upper left")
 """
 
 plt.tight_layout(pad=3.0)
 
 def animate(i):
-    # Functionality
     land()
-    sleep(0.2)
-    #temp, pressure= getData()
-    #ax,ay,az = getAcc()
+    temp, pressure= getData()
+    ax,ay,az = getAcc()
+    #delta_x, delta_y, delta_z = getPos()
     #roll, pitch, yaw = getOdom()
-    
-    
     # append temperature
-    '''
     yar.append(temp)
     yar2.append(pressure)
     
@@ -378,17 +459,11 @@ def animate(i):
     ax3.set_xlim(0, i+1)
     #ax4.set_xlim(0, i+1)
     #ax5.set_xlim(0, i+1)
-    '''
-    land()
-    sleep(0.2)
-
-
-    
 
 topFrame = tk.Frame(root)
 topFrame.pack(side = tk.TOP)
 
-landButton = tk.Button(topFrame, text="Landing Sequence", command=drop)
+landButton = tk.Button(topFrame, text="Landing Sequence", command=land)
 abortButton = tk.Button(topFrame, text='ABORT!', command= abort)
 plotcanvas = FigureCanvasTkAgg(fig, root)
 
@@ -396,7 +471,6 @@ landButton.pack(side = tk.LEFT)
 abortButton.pack(side= tk.RIGHT)
 plotcanvas.get_tk_widget().pack()
 ani = animation.FuncAnimation(fig, animate, interval=1000, blit=False)
-
 root.mainloop()
 
 pwm_1.stop()
