@@ -264,7 +264,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 		print("[3] Take a photo")
 		if print_time_of_function:
 			toc = time.perf_counter()
-			print(f"Time to take a photo = {toc - tic:0.4f} seconds")
+			print("Time to take a photo = {toc - tic:0.4f} seconds")
 			
 			
 	#Find aruco Markers
@@ -377,7 +377,7 @@ def getOrien():
     Gy = gyro_y/131.0
     Gz = gyro_z/131.0
 
-    orientation = [Gx, Gy, Gz]
+    orientation = [round(Gx,2), round(Gy, 2), round(Gz, 2)]
     return orientation
 
 def sendData(tempID, temp, pressureID, pressure):
