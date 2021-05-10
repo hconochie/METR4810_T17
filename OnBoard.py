@@ -367,16 +367,6 @@ def getAccel():
 
     return str(Ax), str(Ay), str(Az)
 
-def getDelta(k):
-    delta = [[1  ,  2,  1],
-             [0.1,  1,  1],
-             [0  ,  0,  0],
-             [1  ,  1,0.3],
-             [0.2,0.1,0.2],
-             [0  ,0.9,  2],
-             [1  ,  2,0.4]]
-    return delta[k]
-
 def getOrien():
     #Read Gyroscope raw value
     gyro_x = read_raw_data(GYRO_XOUT_H)
@@ -405,15 +395,6 @@ def sendAccel(axID, ax, ayID, ay, azID, az):
     radio.stopListening()
     time.sleep(0.25)
     message = list(axID) + list(ax) + list(ayID) + list(ay) + list(azID) + list(az)
-    print("About to send message")
-    radio.write(message)
-    print("send data to master")
-    radio.startListening()
-
-def sendPos(delta_xID, delta_x, delta_yID, delta_y, delta_zID, delta_z):
-    radio.stopListening()
-    time.sleep(0.25)
-    message = list(delta_xID) + list(delta_x) + list(delta_yID) + list(delta_y) + list(delta_zID) + list(delta_z)
     print("About to send message")
     radio.write(message)
     print("send data to master")
