@@ -61,49 +61,30 @@ pwm_2.start(0)
 pwm_3.start(0)
 pwm_4.start(0)
 
+
 def drop():
     # Trust up
     SetAngle(pwm_1,2,70)
     sleep(1)
-    # Turn
     SetAngle(pwm_2,3,70)
-    SetAngle(pwm_2,3,90)
+    # Turn
 
 def land():
     SetAngle(pwm_1,2,90)
     SetAngle(pwm_2,3,90)
     SetAngle(pwm_3,4,90)
     SetAngle(pwm_4,18,90)
-    #vis_x,vis_y = getVision()
-    #vis_x = float(vis_x)
-    #vis_y = float(vis_y)
-    #tx = int(vis_x*40 + 70)
-    #ty = int(vis_y*40 + 70)
-    #print(tx,ty)
-    #if not 82 < tx < 93:
-    #    SetAngle(pwm_3,4,tx)
-    #    SetAngle(pwm_3,4,90)
-    #if not 82 < ty < 93:
-    #    SetAngle(pwm_4,18,ty)
-    #    SetAngle(pwm_4,18,90)
-
-    
+    #x_v,y_v = getVision()
+    #if !(0.45 < x_v < 0.55):
+    #    angleX = 70 + (40*x_v)
+    #    SetAngle(pwm_3,4,angleX)
+    #if !(0.45 < y_v < 0.55):
+    #    angleY = 70 + (40*y_v)
+    #    SetAngle(pwm_4,18,angleY)
+        
 
 def abort():
-    GPIO.output(23, GPIO.HIGH)
-    time.sleep(1)
-    GPIO.output(23, GPIO.LOW)
-    
-    # Send abort command
-    command = "ABORT"
-    message = list(command)
-    radio.write(message)
-    print("We sent the message of {}".format(message))
-    # check for ack payload
-    if radio.isAckPayloadAvailable():
-        returnedPL = []
-        returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
-        print("Our returned payload was {}".format(returnedPL))
+    SetAngle(pwm_1,2,110)
         
 def receiveData():
     print("Ready to recieve data.")
@@ -148,6 +129,8 @@ def receiveAcc():
     axID, ax, ayID, ay, azID, az = string.split('_')
     radio.stopListening()
     return ax, ay, az
+
+
 
 def receiveOdom():
     print("Ready to recieve data.")
@@ -232,6 +215,8 @@ def getAcc():
     print("aX: ", ax," aY: ", ay, " aZ: ", az)
     return ax,ay,az
 
+
+
 def getOdom():
     # GET ODOMETRY
     command = "GET_ODOM"
@@ -296,25 +281,24 @@ yar5 = []
 yar6 = []
 yar7 = []
 yar8 = []
-yar9 = []
 
 style.use('ggplot')
 # print(plt.style.available)
 fig = plt.figure(figsize=(8, 16), dpi=80)
-ax1 = fig.add_subplot(3,1,1)
+ax1 = fig.add_subplot(4,1,1)
 ax1.set_ylim(0, 50)
 line1, = ax1.plot(xar, yar, 'r', marker='o')
 #ax1.set_xlabel('Time (seconds)')
 ax1.set_ylabel('Temperature (C)', **axes_font)
 ax1.set_title('Temperature Plot', **title_font)
 
-ax2 = fig.add_subplot(3,1,2)
+ax2 = fig.add_subplot(4,1,2)
 ax2.set_ylim(0, 200)
 line2, = ax2.plot(xar, yar2, 'r', marker='o')
 ax2.set_ylabel('Pressure (MPa)', **axes_font)
 ax2.set_title('Pressure Plot', **title_font)
 
-ax3 = fig.add_subplot(3,1,3)
+ax3 = fig.add_subplot(4,1,3)
 ax3.set_ylim(-1, 1)
 line3, = ax3.plot(xar, yar3, 'r', marker='o')
 line4, = ax3.plot(xar, yar4, 'g', marker='o')
@@ -323,67 +307,58 @@ ax3.set_ylabel("Acceleration (m/s^2)", **axes_font)
 ax3.set_title("Acceleration Plot", **title_font)
 ax3.legend("xyz", loc="upper left")
 
-"""
+
+
 ax4 = fig.add_subplot(4,1,4)
-ax4.set_ylim(-1, 1)
-line6, = ax4.plot(xar, yar6, 'b', marker='o')
-ax4.set_ylabel("Change in position from launch (m)", **axes_font)
-ax4.set_title("Position Plot", **title_font)
-ax4.legend("xyz", loc="upper left")
-"""
+ax4.set_ylim(0, 270)
+line6, = ax4.plot(xar, yar6, 'r', marker='o')
+line7, = ax4.plot(xar, yar7, 'g', marker='o')
+line8, = ax4.plot(xar, yar8, 'b', marker='o')
+ax4.set_ylabel("Change in odometry from launch (deg)", **axes_font)
+ax4.set_title("Odometry Plot", **title_font)
+ax4.legend("rpy", loc="upper left")
+
 
 plt.tight_layout(pad=3.0)
 
 def animate(i):
+
     # Functionality
     land()
     sleep(0.2)
-    #temp, pressure= getData()
-    #ax,ay,az = getAcc()
-    #roll, pitch, yaw = getOdom()
     
-    
+    temp, pressure= getData()
+    ax,ay,az = getAcc()
+    roll, pitch, yaw = getOdom()
     # append temperature
-    '''
     yar.append(temp)
     yar2.append(pressure)
-    
     yar3.append(ax)
     print(yar3)
     yar4.append(ay)
     print(yar4)
     yar5.append(az)
     print(yar5)
-    #yar6.append(delta_z)
-    #yar7.append(roll)
-    #yar8.append(pitch)
-    #yar9.append(yaw)
+
+    yar6.append(roll)
+    yar7.append(pitch)
+    yar8.append(yaw)
     
     xar.append(i)
-    print(xar)
     line1.set_data(xar, yar)
-    print("line 1", line1)
     line2.set_data(xar, yar2)
     line3.set_data(xar, yar3)
     line4.set_data(xar, yar4)
     line5.set_data(xar, yar5)
-    """
     line6.set_data(xar, yar6)
     line7.set_data(xar, yar7)
     line8.set_data(xar, yar8)
-    line9.set_data(xar, yar9)
-    """
+
     ax1.set_xlim(0, i+1)
     ax2.set_xlim(0, i+1)
     ax3.set_xlim(0, i+1)
-    #ax4.set_xlim(0, i+1)
-    #ax5.set_xlim(0, i+1)
-    '''
-    land()
-    sleep(0.2)
+    ax4.set_xlim(0, i+1)
 
-
-    
 
 topFrame = tk.Frame(root)
 topFrame.pack(side = tk.TOP)
