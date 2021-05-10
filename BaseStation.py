@@ -64,30 +64,35 @@ pwm_4.start(0)
 
 def drop():
     # Trust up
-    SetAngle(pwm_1,2,70)
+    SetAngle(pwm_1,2,80)
     sleep(1)
-    SetAngle(pwm_2,3,70)
+    SetAngle(pwm_2,3,80)
     # Turn
 
 def land():
-    SetAngle(pwm_1,2,90)
-    SetAngle(pwm_2,3,90)
-    SetAngle(pwm_3,4,90)
-    SetAngle(pwm_4,18,90)
-    #x_v,y_v = getVision()
-    #if !(0.45 < x_v < 0.55):
-    #    angleX = 70 + (40*x_v)
-    #    SetAngle(pwm_3,4,angleX)
-    #if !(0.45 < y_v < 0.55):
-    #    angleY = 70 + (40*y_v)
-    #    SetAngle(pwm_4,18,angleY)
+    x_v,y_v = getVision()
+    if not (0.48 < x_v < 0.52):
+        angleX = 70 + (40*x_v)
+        angleX = int(angleX)
+        SetAngle(pwm_3, 4, angleX)
+        sleep(1)
+        SetAngle(pwm_3, 4, 90)
+    if not (0.48 < y_v < 0.52):
+        angleY = 70 + (40*y_v)
+        angleY = int(angleY)
+        SetAngle(pwm_4, 18, angleY)
+        sleep(1)
+        SetAngle(pwm_4, 18, 90)
+    else:
+        SetAngle(pwm_3, 4, 90)
+        SetAngle(pwm_4, 18, 90)
         
 
 def abort():
-    SetAngle(pwm_1,2,110)
+    SetAngle(pwm_1,2,120)
         
 def receiveData():
-    print("Ready to recieve data.")
+    #print("Ready to recieve data.")
     radio.startListening()
 
     while not radio.available(0):
@@ -96,12 +101,12 @@ def receiveData():
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
 
-    print("Translating receivedMessage into unicode characters...")
+    #print("Translating receivedMessage into unicode characters...")
     string = ""
     for n in receivedMessage:
         if (n >= 32 and n <= 126):
                 string += chr(n)
-    print("Our slave sent us: {}".format(string))
+    #print("Our slave sent us: {}".format(string))
 
     # parse message
     tempID, temp, pressureID, pressure = string.split('_')
@@ -109,7 +114,7 @@ def receiveData():
     return temp, pressure
 
 def receiveAcc():
-    print("Ready to recieve data.")
+    #print("Ready to recieve data.")
     radio.startListening()
 
     while not radio.available(0):
@@ -118,12 +123,12 @@ def receiveAcc():
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
 
-    print("Translating receivedMessage into unicode characters...")
+    #print("Translating receivedMessage into unicode characters...")
     string = ""
     for n in receivedMessage:
         if (n >= 32 and n <= 126):
                 string += chr(n)
-    print("Our slave sent us: {}".format(string))
+    #print("Our slave sent us: {}".format(string))
 
     # parse message
     axID, ax, ayID, ay, azID, az = string.split('_')
@@ -133,7 +138,7 @@ def receiveAcc():
 
 
 def receiveOdom():
-    print("Ready to recieve data.")
+    #print("Ready to recieve data.")
     radio.startListening()
 
     while not radio.available(0):
@@ -142,7 +147,7 @@ def receiveOdom():
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
 
-    print("Translating receivedMessage into unicode characters...")
+    #print("Translating receivedMessage into unicode characters...")
     string = ""
     for n in receivedMessage:
         if (n >= 32 and n <= 126):
@@ -155,7 +160,7 @@ def receiveOdom():
     return roll, pitch, yaw
 
 def receiveVision():
-    print("Ready to recieve data.")
+    #print("Ready to recieve data.")
     radio.startListening()
 
     while not radio.available(0):
@@ -164,12 +169,12 @@ def receiveVision():
     receivedMessage = []
     radio.read(receivedMessage, radio.getDynamicPayloadSize())
 
-    print("Translating receivedMessage into unicode characters...")
+    #print("Translating receivedMessage into unicode characters...")
     string = ""
     for n in receivedMessage:
         if (n >= 32 and n <= 126):
                 string += chr(n)
-    print("Our slave sent us: {}".format(string))
+    #print("Our slave sent us: {}".format(string))
 
     # parse message
     a,vis_x,b, vis_y = string.split('_')
@@ -181,12 +186,12 @@ def getData():
     command = "GET_DATA"
     message = list(command)
     radio.write(message)
-    print("We sent the message of {}".format(message))
+    #print("We sent the message of {}".format(message))
     # check for ack payload
     if radio.isAckPayloadAvailable():
         returnedPL = []
         returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
-        print("Our returned payload was {}".format(returnedPL))
+        #print("Our returned payload was {}".format(returnedPL))
         temp, pressure= receiveData()
     else:
         print("No Payload was received")
@@ -200,12 +205,12 @@ def getAcc():
     command = "GET_ACC"
     message = list(command)
     radio.write(message)
-    print("We sent the message of {}".format(message))
+    #print("We sent the message of {}".format(message))
     # check for ack payload
     if radio.isAckPayloadAvailable():
         returnedPL = []
         returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
-        print("Our returned payload was {}".format(returnedPL))
+        #print("Our returned payload was {}".format(returnedPL))
         ax,ay,az = receiveAcc()
     else:
         print("No Payload was received")
@@ -222,12 +227,12 @@ def getOdom():
     command = "GET_ODOM"
     message = list(command)
     radio.write(message)
-    print("We sent the message of {}".format(message))
+    #print("We sent the message of {}".format(message))
     # check for ack payload
     if radio.isAckPayloadAvailable():
         returnedPL = []
         returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
-        print("Our returned payload was {}".format(returnedPL))
+        #print("Our returned payload was {}".format(returnedPL))
         roll, pitch, yaw = receiveOdom()
     else:
         print("No Payload was received")
@@ -242,17 +247,19 @@ def getVision():
     command = "LOOK"
     message = list(command)
     radio.write(message)
-    print("We sent the message of {}".format(message))
+    #print("We sent the message of {}".format(message))
     # check for ack payload
     if radio.isAckPayloadAvailable():
         returnedPL = []
         returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
-        print("Our returned payload was {}".format(returnedPL))
-        vis_x, vis_y = receiveVision()
+        #print("Our returned payload was {}".format(returnedPL))
+        vision_x, vision_y = receiveVision()
+        vis_x = float(vision_x)
+        vis_y = float(vision_y)
     else:
         print("No Payload was received")
-        vis_x = 0
-        vis_y = 0
+        vis_x = 0.5
+        vis_y = 0.5
     print("vis_x: ", vis_x, " vis_y: ", vis_y)
     return vis_x, vis_y
 
@@ -310,7 +317,7 @@ ax3.legend("xyz", loc="upper left")
 
 
 ax4 = fig.add_subplot(4,1,4)
-ax4.set_ylim(0, 270)
+ax4.set_ylim(-180, 180)
 line6, = ax4.plot(xar, yar6, 'r', marker='o')
 line7, = ax4.plot(xar, yar7, 'g', marker='o')
 line8, = ax4.plot(xar, yar8, 'b', marker='o')
@@ -322,10 +329,6 @@ ax4.legend("rpy", loc="upper left")
 plt.tight_layout(pad=3.0)
 
 def animate(i):
-
-    # Functionality
-    land()
-    sleep(0.2)
     
     temp, pressure= getData()
     ax,ay,az = getAcc()
@@ -358,6 +361,8 @@ def animate(i):
     ax2.set_xlim(0, i+1)
     ax3.set_xlim(0, i+1)
     ax4.set_xlim(0, i+1)
+
+    land()
 
 
 topFrame = tk.Frame(root)
