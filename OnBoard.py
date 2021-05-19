@@ -494,8 +494,8 @@ while True:
 
     if command == "LOOK":
         x, y  = capture_image(arucoDict,arucoParams, vid_stream)
-        xPos = str(np.float16(x))
-        yPos = str(np.float16(y))
+        xPos = str(round(x,3))
+        yPos = str((round(y,3))
         #show_image(direction, vid_stream)
         xPosID = "xPos_"
         yPosID = "_yPos_"
