@@ -482,15 +482,15 @@ while True:
 
     if command == "POWER_CYCLE":
         print("My battery is low and its getting dark")
-        GPIO.output(24, GPIO.HIGH)
-        time.sleep(1)
-        GPIO.output(24, GPIO.LOW)
-
-    if command == "LAND":
-        print("Now attempting landing...")
         GPIO.output(15, GPIO.HIGH)
         time.sleep(1)
         GPIO.output(15, GPIO.LOW)
+
+    if command == "LAND":
+        print("Now attempting landing...")
+        GPIO.output(18, GPIO.HIGH)
+        time.sleep(1)
+        GPIO.output(18, GPIO.LOW)
 
     if command == "LOOK":
         x, y  = capture_image(arucoDict,arucoParams, vid_stream)
