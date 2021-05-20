@@ -481,7 +481,7 @@ while True:
         sendOdom(rollID, roll, pitchID, pitch, yawID, yaw)
 
     if command == "POWER_CYCLE":
-        print("Powercycling the PI, ARRGHHH")
+        print("My battery is low and its getting dark")
         GPIO.output(24, GPIO.HIGH)
         time.sleep(1)
         GPIO.output(24, GPIO.LOW)
