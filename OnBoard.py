@@ -488,9 +488,9 @@ while True:
 
     if command == "LAND":
         print("Now attempting landing...")
-        GPIO.output(18, GPIO.HIGH)
+        GPIO.output(15, GPIO.HIGH)
         time.sleep(1)
-        GPIO.output(18, GPIO.LOW)
+        GPIO.output(15, GPIO.LOW)
 
     if command == "LOOK":
         x, y  = capture_image(arucoDict,arucoParams, vid_stream)
