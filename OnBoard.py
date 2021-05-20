@@ -480,11 +480,11 @@ while True:
         yaw = str(orien[2])
         sendOdom(rollID, roll, pitchID, pitch, yawID, yaw)
 
-    if command == "ABORT":
-        print("ABORT THE MISSION ARRGHHH")
-        GPIO.output(23, GPIO.HIGH)
+    if command == "POWER_CYCLE":
+        print("Powercycling the PI, ARRGHHH")
+        GPIO.output(24, GPIO.HIGH)
         time.sleep(1)
-        GPIO.output(23, GPIO.LOW)
+        GPIO.output(24, GPIO.LOW)
 
     if command == "LAND":
         print("Now attempting landing...")
