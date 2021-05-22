@@ -1,17 +1,22 @@
+# Default imports
+import time
+import numpy as np
+from time import sleep
+
+# Radio imports
 import RPi.GPIO as GPIO
 from lib_nrf24 import NRF24
-import time
 import spidev
+
+# GUI imports
 import Tkinter as tk
-import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from time import sleep
 
-
+# Setting GUI text properties
 title_font = {'family' : 'normal',
         'weight' : 'bold',
         'size'   : 12}
@@ -22,14 +27,13 @@ axes_font = {'family' : 'normal',
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
+# Pin setup
 GPIO.setmode(GPIO.BCM)
 #GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(17, GPIO.OUT, initial=GPIO.LOW)
 pipes = [[0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]]
 
-
-
-
+# ###Radio Init###
 radio = NRF24(GPIO, spidev.SpiDev())
 radio.begin(0, 17)
 radio.setPayloadSize(32)
@@ -61,7 +65,7 @@ pwm_2.start(0)
 pwm_3.start(0)
 pwm_4.start(0)
 
-
+# ###Functionality###
 def drop():
     # Trust up
     SetAngle(pwm_1,2,80)
@@ -90,7 +94,8 @@ def land():
 
 def abort():
     SetAngle(pwm_1,2,120)
-        
+       
+# ###Decifer data stream###
 def receiveData():
     #print("Ready to recieve data.")
     radio.startListening()
@@ -134,8 +139,6 @@ def receiveAcc():
     axID, ax, ayID, ay, azID, az = string.split('_')
     radio.stopListening()
     return ax, ay, az
-
-
 
 def receiveOdom():
     #print("Ready to recieve data.")
@@ -181,6 +184,7 @@ def receiveVision():
     radio.stopListening()
     return vis_x, vis_y
 
+# ###Ask On-board Pi for data###
 def getData():
     # GET DATA
     command = "GET_DATA"
@@ -219,8 +223,6 @@ def getAcc():
         az = 0
     print("aX: ", ax," aY: ", ay, " aZ: ", az)
     return ax,ay,az
-
-
 
 def getOdom():
     # GET ODOMETRY
@@ -279,6 +281,7 @@ root = tk.Tk()
 root.title('METR4810 Mission Control GUI')
 root.config(background='#fafafa')
 
+# Record data
 xar = []
 yar = []
 yar2 = []
@@ -289,6 +292,7 @@ yar6 = []
 yar7 = []
 yar8 = []
 
+# Plots
 style.use('ggplot')
 # print(plt.style.available)
 fig = plt.figure(figsize=(8, 16), dpi=80)
@@ -314,8 +318,6 @@ ax3.set_ylabel("Acceleration (m/s^2)", **axes_font)
 ax3.set_title("Acceleration Plot", **title_font)
 ax3.legend("xyz", loc="upper left")
 
-
-
 ax4 = fig.add_subplot(4,1,4)
 ax4.set_ylim(-180, 180)
 line6, = ax4.plot(xar, yar6, 'r', marker='o')
@@ -325,9 +327,9 @@ ax4.set_ylabel("Change in odometry from launch (deg)", **axes_font)
 ax4.set_title("Odometry Plot", **title_font)
 ax4.legend("rpy", loc="upper left")
 
-
 plt.tight_layout(pad=3.0)
 
+# Main function that operates the flight system and plotting
 def animate(i):
     
     temp, pressure= getData()
@@ -364,7 +366,7 @@ def animate(i):
 
     land()
 
-
+# GUI set up
 topFrame = tk.Frame(root)
 topFrame.pack(side = tk.TOP)
 
