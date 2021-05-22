@@ -254,6 +254,7 @@ def initialize_camera():
 	#Load the camera
 	tic = time.perf_counter()
 	vid_stream = PiVideoStream().start()
+	time.sleep(2)
 	
 	if print_to_terminal:
 		print("[2] Set camera")
