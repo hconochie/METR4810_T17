@@ -1,11 +1,13 @@
 #Default imports
-import RPi.GPIO as GPIO
-from lib_nrf24 import NRF24
 import time
-import spidev
 import random
 
-#Hunter H imports
+# Radio imports
+import RPi.GPIO as GPIO
+from lib_nrf24 import NRF24
+import spidev
+
+#Vision imports
 from imutils.video.pivideostream import PiVideoStream
 from picamera.array import PiRGBArray
 from picamera import PiCamera
@@ -76,7 +78,7 @@ MPL3115A2_CTRL_REG1_RAW				= 0x40 # RAW output mode
 MPL3115A2_CTRL_REG1_ALT				= 0x80 # Part is in altimeter mod
 MPL3115A2_CTRL_REG1_BAR				= 0x00 # Part is in barometer mode
  
-
+# ###Sensor functions###
 def control_alt_config():
 	"""Select the Control Register-1 Configuration from the given provided value"""
 	CONTROL_CONFIG = (MPL3115A2_CTRL_REG1_SBYB | MPL3115A2_CTRL_REG1_OS128 | MPL3115A2_CTRL_REG1_ALT)
@@ -170,6 +172,9 @@ def read_raw_data(addr):
 
 MPU_Init()
 #### End sensor Init ####
+
+
+# ###Radio Init###
 radio = NRF24(GPIO, spidev.SpiDev())
 radio.begin(0, 17)
 radio.setPayloadSize(32)
@@ -186,9 +191,10 @@ radio.openReadingPipe(1, pipes[1])
 radio.printDetails()
 
 radio.startListening()
+# ###END Radio Init###
 
 
-#### Start of Hunter H. Vision stuff
+#### Vision Functions ###
 class PiVideoStream:
 	def __init__(self, resolution = (1920,1080), framerate = 30):
 		self.camera = PiCamera()
@@ -249,8 +255,6 @@ def initialize_camera():
 			
 	return arucoDict,arucoParams,vid_stream
 
-
-### Vision
 def capture_image(arucoDict,arucoParams, vid_stream):
 	#Capture an image
 	tic = time.perf_counter()
@@ -265,8 +269,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 		if print_time_of_function:
 			toc = time.perf_counter()
 			print("Time to take a photo = {toc - tic:0.4f} seconds")
-			
-			
+				
 	#Find aruco Markers
 	tic = time.perf_counter()
 	#run for a max number of frames or until marker is found
@@ -320,7 +323,6 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 		print(f"Time to Detect markers = {toc - tic:0.4f} seconds")
 	return x_out, y_out
 	
-	
 def show_image(direction, vid_stream):
 	w = 480
 	h = 360
@@ -343,6 +345,7 @@ print_time_of_function = False
 arucoDict, arucoParams, vid_stream = initialize_camera()
 
 
+# ###Get sensor data###
 def getTemp():
     control_alt_config()
     data_config()
@@ -380,6 +383,7 @@ def getOrien():
     orientation = [round(Gx,2), round(Gy, 2), round(Gz, 2)]
     return orientation
 
+# ###Sending Data###
 def sendData(tempID, temp, pressureID, pressure):
     radio.stopListening()
     time.sleep(0.25)
@@ -390,7 +394,6 @@ def sendData(tempID, temp, pressureID, pressure):
     print("send data to master")
     radio.startListening()
 
-
 def sendAccel(axID, ax, ayID, ay, azID, az):
     radio.stopListening()
     time.sleep(0.25)
@@ -399,7 +402,6 @@ def sendAccel(axID, ax, ayID, ay, azID, az):
     radio.write(message)
     print("send data to master")
     radio.startListening()
-
 
 def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
     radio.stopListening()
@@ -419,6 +421,7 @@ def sendLook(xPosID, xPos, yPosID, ypos):
     print("send data to master")
     radio.startListening()
 
+####### MAIN LOOP #######
 while True:
     ackPL = [1]
     radio.writeAckPayload(1, ackPL, len(ackPL))
