@@ -196,7 +196,7 @@ radio.startListening()
 
 #### Vision Functions ###
 class PiVideoStream:
-	def __init__(self, resolution = (1920,1080), framerate = 30):
+	def __init__(self, resolution = (1216,1200), framerate = 30):
 		self.camera = PiCamera()
 		self.camera.resolution = resolution
 		self.camera.framerate = framerate
@@ -236,6 +236,14 @@ def initialize_camera():
 	arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
 	arucoParams = cv2.aruco.DetectorParameters_create()
 	
+	arucoParams.minMarkerPerimeterRate = 0.08
+	arucoParams.polygonalApproxAccuracyRate = 0.1 	
+	arucoParams.minDistanceToBorder = 2 
+	arucoParams.perspectiveRemovePixelPerCell = 4 
+	arucoParams.perspectiveRemoveIgnoredMarginPerCell = 0.2
+	arucoParams.errorCorrectionRate = 1.2
+	arucoParams.cornerRefinementMaxIterations = 30 
+	
 	if print_to_terminal:
 		print("[1] Loaded dictionaries")
 		if print_time_of_function:
@@ -258,8 +266,6 @@ def initialize_camera():
 def capture_image(arucoDict,arucoParams, vid_stream):
 	#Capture an image
 	tic = time.perf_counter()
-	frame = vid_stream.read()
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	
 	start_x = vid_stream.camera.resolution[0]/2
 	start_y = vid_stream.camera.resolution[1]/2
@@ -281,7 +287,10 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	x_out = 0.5
 	y_out = 0.5
 	
-	while (frame_num <= max_frames) and (no_marker):		
+	while (frame_num <= max_frames) and (no_marker):
+		frame = vid_stream.read()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		
 		#detect ArUco markers in the input frame
 		(corners, ids, rejected) = cv2.aruco.detectMarkers(frame,arucoDict, parameters=arucoParams)
 		# verify *at least* one of the 2 desired ArUco marker were detected
