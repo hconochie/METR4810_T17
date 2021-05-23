@@ -291,6 +291,10 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	
 	while (frame_num <= max_frames) and (no_marker):
 		frame = vid_stream.read()
+		#Check if the image is dark, which means craft is on the ground
+		if np.mean(frame) > 200:
+			return -1, -1
+		
 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		
 		#detect ArUco markers in the input frame
