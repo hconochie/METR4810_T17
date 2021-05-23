@@ -124,11 +124,8 @@ def read_pres():
 
 	return {'p' : pressure}
  
-
 counter = 1
  
-
-
 
 #some MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
@@ -178,7 +175,7 @@ MPU_Init()
 #### End sensor Init ####
 
 
-# ###Radio Init###
+###Radio Init###
 radio = NRF24(GPIO, spidev.SpiDev())
 radio.begin(0, 17)
 radio.setPayloadSize(32)
@@ -195,7 +192,7 @@ radio.openReadingPipe(1, pipes[1])
 radio.printDetails()
 
 radio.startListening()
-# ###END Radio Init###
+###END Radio Init###
 
 
 #### Vision Functions ###
@@ -220,15 +217,12 @@ class PiVideoStream:
 		for f in self.stream:
 			self.frame = f.array
 			self.rawCapture.truncate(0)
-			
-			m = np.mean(self.frame)
-			
+
 			#Send an abort command, as the ground was reached
+			m = np.mean(self.frame)			
 			if m < 20:
 				#Check if the image is dark, which means craft is on the ground
 				ground = True
-			else:
-				ground = False
 			
 			if self.stopped:
 				self.stream.close()
@@ -256,42 +250,18 @@ def initialize_camera():
 	arucoParams.perspectiveRemoveIgnoredMarginPerCell = 0.2
 	arucoParams.errorCorrectionRate = 1.2
 	arucoParams.cornerRefinementMaxIterations = 30 
-	
-	if print_to_terminal:
-		print("[1] Loaded dictionaries")
-		if print_time_of_function:
-			toc = time.perf_counter()
-			print(f"Time to load dictionary = {toc - tic:0.4f} seconds")
-
-			
+				
 	#Load the camera
-	tic = time.perf_counter()
 	vid_stream = PiVideoStream().start()
-	time.sleep(2)
-	
-	if print_to_terminal:
-		print("[2] Set camera")
-		if print_time_of_function:
-			toc = time.perf_counter()
-			print(f"Time to load camera = {toc - tic:0.4f} seconds")
-			
+	time.sleep(2)			
 	return arucoDict,arucoParams,vid_stream
 
 def capture_image(arucoDict,arucoParams, vid_stream):
 	#Capture an image
-	tic = time.perf_counter()
-	
 	start_x = vid_stream.camera.resolution[0]/2
 	start_y = vid_stream.camera.resolution[1]/2
-	
-	if print_to_terminal:
-		print("[3] Take a photo")
-		if print_time_of_function:
-			toc = time.perf_counter()
-			print("Time to take a photo = {toc - tic:0.4f} seconds")
-				
+					
 	#Find aruco Markers
-	tic = time.perf_counter()
 	#run for a max number of frames or until marker is found
 	max_frames = 1
 	desired_markers = [72]
@@ -336,14 +306,8 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 				#x_out = (cX - start_x)/start_x
 				#y_out = (cY - start_y)/start_y
 				
-				if print_to_terminal:
-					print("[4] Detected Marker")
 				no_marker = False
 		frame_num += 1
-	
-	if print_time_of_function:
-		toc = time.perf_counter()
-		print(f"Time to Detect markers = {toc - tic:0.4f} seconds")
 	return x_out, y_out
 	
 def show_image(direction, vid_stream):
@@ -359,12 +323,6 @@ def show_image(direction, vid_stream):
 	
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
-
-#Print data for controlling timing
-print_to_terminal = False
-#requires print_to_terminal
-print_time_of_function = False
-
 arucoDict, arucoParams, vid_stream = initialize_camera()
 
 
