@@ -22,6 +22,9 @@ import smbus
 from time import sleep
 
 
+#check if the camera thinks its on the ground
+ground = False
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
@@ -218,6 +221,15 @@ class PiVideoStream:
 			self.frame = f.array
 			self.rawCapture.truncate(0)
 			
+			m = np.mean(self.frame)
+			
+			#Send an abort command, as the ground was reached
+			if m < 20:
+				#Check if the image is dark, which means craft is on the ground
+				ground = True
+			else:
+				ground = False
+			
 			if self.stopped:
 				self.stream.close()
 				self.rawCapture.close()
@@ -290,13 +302,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	y_out = 0.5
 	
 	while (frame_num <= max_frames) and (no_marker):
-		frame = vid_stream.read()
-		#Check if the image is dark, which means craft is on the ground
-		m = np.mean(frame)
-		print(m)
-		if m < 50:
-			return -1, -1
-		
+		frame = vid_stream.read()	
 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		
 		#detect ArUco markers in the input frame
@@ -520,6 +526,15 @@ while True:
         xPosID = "xPos_"
         yPosID = "_yPos_"
         sendLook(xPosID, xPos, yPosID, yPos)
+	
+    if ground == True:
+        radio.stopListening()
+    	time.sleep(0.25)
+    	message = list("ground")
+    	print("About to send message")
+    	radio.write(message)
+    	print("send data to master")
+    	radio.startListening()
 
     command = ""
 
