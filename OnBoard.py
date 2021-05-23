@@ -467,9 +467,9 @@ while True:
 
     if command == "POWER_CYCLE":
         print("My battery is low and its getting dark")
-        GPIO.output(15, GPIO.HIGH)
+        GPIO.output(27, GPIO.HIGH)
         time.sleep(1)
-        GPIO.output(15, GPIO.LOW)
+        GPIO.output(27, GPIO.LOW)
 
     if command == "LAND":
         print("Now attempting landing...")
