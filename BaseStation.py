@@ -72,7 +72,7 @@ def drop():
     SetAngle(pwm_1,2,60)
     sleep(0.2)
     SetAngle(pwm_1,2,50)
-    
+    # Rotate Craft
     sleep(2)
     SetAngle(pwm_2,3,77)
     sleep(1.5)
@@ -81,8 +81,9 @@ def drop():
     SetAngle(pwm_2,3,90)
     sleep(0.5)
     SetAngle(pwm_2,3,90)
-    #check = 1
+
 def rotate():
+    #rotate craft slightly more
     SetAngle(pwm_2,3,75)
     sleep(1)
     SetAngle(pwm_2,3,90)
@@ -90,12 +91,15 @@ def rotate():
     
 land_sleep = 0.01
 def land():
-
+    #Controller algorithm and control
+    
+    #Get vision from onboard computer
     x_v,y_v = getVision()
-    #print("xv",x_v,"yv",y_v)
-
+   
+    #Check for grounded flag from onboard
     if x_v == -1:
         abort()
+    #Check for values to send servo appropriate commands    
     if 0 < x_v < 0.5:
         SetAngle(pwm_3,4,75)
         sleep(land_sleep)
@@ -122,12 +126,9 @@ def land():
         SetAngle(pwm_4,18,90)
 
 
-    #print(anglex)
-    #SetAngle(pwm_3,4,anglex)
-    #sleep(0.1)
-    #SetAngle(pwm_3,4,90)
         
 def abort():
+    #Set throttle to zero
     SetAngle(pwm_1,2,120)
 
 def receiveData():
