@@ -217,13 +217,6 @@ class PiVideoStream:
 		for f in self.stream:
 			self.frame = f.array
 			self.rawCapture.truncate(0)
-
-			#Send an abort command, as the ground was reached
-			m = np.mean(self.frame)	
-			print(m)
-			if m < 40:
-				#Check if the image is dark, which means craft is on the ground
-				ground = True
 			
 			if self.stopped:
 				self.stream.close()
@@ -274,6 +267,13 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	
 	while (frame_num <= max_frames) and (no_marker):
 		frame = vid_stream.read()	
+		#Send an abort command, as the ground was reached
+		m = np.mean(self.frame)	
+		print(m)
+		if m < 40:
+			#Check if the image is dark, which means craft is on the ground
+			ground = True
+			
 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		
 		#detect ArUco markers in the input frame
