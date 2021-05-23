@@ -1,46 +1,42 @@
-# Default imports
-import time
-import numpy as np
-from time import sleep
-
-# Radio imports
 import RPi.GPIO as GPIO
 from lib_nrf24 import NRF24
+import time
 import spidev
-
-# GUI imports
 import Tkinter as tk
+import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from time import sleep
 
-# Setting GUI text properties
-title_font = {'family' : 'normal',
+
+title_font = {'family' : 'DejaVu Sans',
         'weight' : 'bold',
         'size'   : 12}
-axes_font = {'family' : 'normal',
-        'weight' : 'normal',
+axes_font = {'family' : 'DejaVu Sans',
+        'weight' : 'bold',
         'size' : 6}
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
-# Pin setup
 GPIO.setmode(GPIO.BCM)
 #GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(17, GPIO.OUT, initial=GPIO.LOW)
 pipes = [[0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]]
 
-# ###Radio Init###
+
+
+
 radio = NRF24(GPIO, spidev.SpiDev())
 radio.begin(0, 17)
 radio.setPayloadSize(32)
 radio.setChannel(0x60) #set channcel 60
 
 radio.setDataRate(NRF24.BR_2MBPS)
-radio.setPALevel(NRF24.PA_MIN)
+radio.setPALevel(NRF24.PA_MAX)
 radio.setAutoAck(True)
 radio.enableDynamicPayloads()
 radio.enableAckPayload()
@@ -65,37 +61,75 @@ pwm_2.start(0)
 pwm_3.start(0)
 pwm_4.start(0)
 
-# ###Functionality###
+#global check = 0 #Check value for if the craft has dropped.
 def drop():
     # Trust up
+    
     SetAngle(pwm_1,2,80)
     sleep(1)
-    SetAngle(pwm_2,3,80)
-    # Turn
-
+    SetAngle(pwm_1,2,70)
+    sleep(1)
+    SetAngle(pwm_1,2,60)
+    sleep(0.2)
+    SetAngle(pwm_1,2,50)
+    
+    sleep(2)
+    SetAngle(pwm_2,3,77)
+    sleep(1.5)
+    SetAngle(pwm_2,3,90)
+    sleep(0.5)
+    SetAngle(pwm_2,3,90)
+    sleep(0.5)
+    SetAngle(pwm_2,3,90)
+    #check = 1
+def rotate():
+    SetAngle(pwm_2,3,75)
+    sleep(1)
+    SetAngle(pwm_2,3,90)
+    sleep(0.2)
+    
+land_sleep = 0.01
 def land():
-    x_v,y_v = getVision()
-    if not (0.48 < x_v < 0.52):
-        angleX = 70 + (40*x_v)
-        angleX = int(angleX)
-        SetAngle(pwm_3, 4, angleX)
-        sleep(1)
-        SetAngle(pwm_3, 4, 90)
-    if not (0.48 < y_v < 0.52):
-        angleY = 70 + (40*y_v)
-        angleY = int(angleY)
-        SetAngle(pwm_4, 18, angleY)
-        sleep(1)
-        SetAngle(pwm_4, 18, 90)
-    else:
-        SetAngle(pwm_3, 4, 90)
-        SetAngle(pwm_4, 18, 90)
-        
 
+    x_v,y_v = getVision()
+    #print("xv",x_v,"yv",y_v)
+
+    if x_v == -1:
+        abort()
+    if 0 < x_v < 0.5:
+        SetAngle(pwm_3,4,75)
+        sleep(land_sleep)
+        SetAngle(pwm_3,4,90)
+        SetAngle(pwm_3,4,90)
+        
+    elif 1 > x_v > 0.5:
+        SetAngle(pwm_3,4,115)
+        sleep(land_sleep)
+        SetAngle(pwm_3,4,90)
+        SetAngle(pwm_3,4,90)
+        
+    sleep(land_sleep)
+
+    if 0 < y_v < 0.5:
+        SetAngle(pwm_4,18,75)
+        sleep(land_sleep)
+        SetAngle(pwm_4,18,90)
+        SetAngle(pwm_4,18,90)
+    elif 1 > y_v > 0.5:
+        SetAngle(pwm_4,18,115)
+        sleep(land_sleep)
+        SetAngle(pwm_4,18,90)
+        SetAngle(pwm_4,18,90)
+
+
+    #print(anglex)
+    #SetAngle(pwm_3,4,anglex)
+    #sleep(0.1)
+    #SetAngle(pwm_3,4,90)
+        
 def abort():
     SetAngle(pwm_1,2,120)
-       
-# ###Decifer data stream###
+
 def receiveData():
     #print("Ready to recieve data.")
     radio.startListening()
@@ -140,6 +174,8 @@ def receiveAcc():
     radio.stopListening()
     return ax, ay, az
 
+
+
 def receiveOdom():
     #print("Ready to recieve data.")
     radio.startListening()
@@ -155,7 +191,7 @@ def receiveOdom():
     for n in receivedMessage:
         if (n >= 32 and n <= 126):
                 string += chr(n)
-    print("Our slave sent us: {}".format(string))
+    #print("Our slave sent us: {}".format(string))
 
     # parse message
     rollID, roll, pitchID, pitch, yawID, yaw = string.split('_')
@@ -181,14 +217,14 @@ def receiveVision():
 
     # parse message
     a,vis_x,b, vis_y = string.split('_')
+    
     radio.stopListening()
     return vis_x, vis_y
 
-# ###Ask On-board Pi for data###
 def getData():
     # GET DATA
     command = "GET_DATA"
-    message = list(command)
+    message = list(command) 
     radio.write(message)
     #print("We sent the message of {}".format(message))
     # check for ack payload
@@ -198,11 +234,13 @@ def getData():
         #print("Our returned payload was {}".format(returnedPL))
         temp, pressure= receiveData()
     else:
-        print("No Payload was received")
+        #print("No Payload was received")
         temp = 0
         pressure = 0
-    print("temperature is: ", temp," pressure is: ", pressure)
-    return temp, pressure
+    #print("temperature is: ", temp," pressure is: ", pressure)
+    return float(temp), float(pressure)
+
+
 
 def getAcc():
     # GET ACCELERATION
@@ -217,12 +255,14 @@ def getAcc():
         #print("Our returned payload was {}".format(returnedPL))
         ax,ay,az = receiveAcc()
     else:
-        print("No Payload was received")
+        #print("No Payload was received")
         ax = 0
         ay = 0
         az = 0
-    print("aX: ", ax," aY: ", ay, " aZ: ", az)
-    return ax,ay,az
+    #print("aX: ", ax," aY: ", ay, " aZ: ", az)
+    return float(ax),float(ay),float(az)
+
+
 
 def getOdom():
     # GET ODOMETRY
@@ -237,12 +277,12 @@ def getOdom():
         #print("Our returned payload was {}".format(returnedPL))
         roll, pitch, yaw = receiveOdom()
     else:
-        print("No Payload was received")
+        #print("No Payload was received")
         roll = 0
         pitch = 0
         yaw = 0
-    print("roll: ", roll, " pitch: ", pitch, " yaw: ", yaw)
-    return roll, pitch, yaw
+    #print("roll: ", roll, " pitch: ", pitch, " yaw: ", yaw)
+    return float(roll), float(pitch), float(yaw)
 
 def getVision():
     # GET ODOMETRY
@@ -259,20 +299,47 @@ def getVision():
         vis_x = float(vision_x)
         vis_y = float(vision_y)
     else:
-        print("No Payload was received")
+        #print("No Payload was received")
         vis_x = 0.5
         vis_y = 0.5
     print("vis_x: ", vis_x, " vis_y: ", vis_y)
     return vis_x, vis_y
 
+
+def sendPowerCycle():
+    # GET DATA
+    command = "POWER_CYCLE"
+    message = list(command) 
+    radio.write(message)
+    #print("We sent the message of {}".format(message))
+    # check for ack payload
+    if radio.isAckPayloadAvailable():
+        returnedPL = []
+        returnedPL = radio.read(returnedPL, radio.getDynamicPayloadSize())
+    else:
+        print("No Payload was received - PowerCycle")
+        
+
+        
+        
 #SERVO FUNCTIONS
 def SetAngle(pwm,pin,angle):
     duty_cycle = angle/18 +2
-    GPIO.output(pin,True)
     pwm.ChangeDutyCycle(duty_cycle)
-    sleep(0.5)
-    GPIO.output(pin,False)
+    sleep(0.1)
     pwm.ChangeDutyCycle(0)
+
+
+    
+#alt_init = []
+#def landed(ax,ay,az):
+    
+#    if  :
+#        return True
+#    else:
+#        return False
+
+
 
     
     
@@ -281,7 +348,6 @@ root = tk.Tk()
 root.title('METR4810 Mission Control GUI')
 root.config(background='#fafafa')
 
-# Record data
 xar = []
 yar = []
 yar2 = []
@@ -292,7 +358,6 @@ yar6 = []
 yar7 = []
 yar8 = []
 
-# Plots
 style.use('ggplot')
 # print(plt.style.available)
 fig = plt.figure(figsize=(8, 16), dpi=80)
@@ -318,6 +383,8 @@ ax3.set_ylabel("Acceleration (m/s^2)", **axes_font)
 ax3.set_title("Acceleration Plot", **title_font)
 ax3.legend("xyz", loc="upper left")
 
+
+
 ax4 = fig.add_subplot(4,1,4)
 ax4.set_ylim(-180, 180)
 line6, = ax4.plot(xar, yar6, 'r', marker='o')
@@ -327,23 +394,33 @@ ax4.set_ylabel("Change in odometry from launch (deg)", **axes_font)
 ax4.set_title("Odometry Plot", **title_font)
 ax4.legend("rpy", loc="upper left")
 
+
 plt.tight_layout(pad=3.0)
 
-# Main function that operates the flight system and plotting
+
 def animate(i):
     
-    temp, pressure= getData()
-    ax,ay,az = getAcc()
-    roll, pitch, yaw = getOdom()
+    #if not landed(ax,ay,az) and check == 1:
+    land()
+    #else:
+        #alt_init.append(getAltitude)
+    #temp, pressure= getData()
+    temp, pressure = (0,0)
+    #ax,ay,az = getAcc()
+    #print("accel values x, y, z: ", ax, " ", ay, " ", az)
+    ax,ay,az = (0,0,0)
+    #roll, pitch, yaw = getOdom()
+    roll,pitch,yaw = (0,0,0)
     # append temperature
+
     yar.append(temp)
     yar2.append(pressure)
     yar3.append(ax)
-    print(yar3)
+    #print(yar3)
     yar4.append(ay)
-    print(yar4)
+    #print(yar4)
     yar5.append(az)
-    print(yar5)
+    #print(yar5)
 
     yar6.append(roll)
     yar7.append(pitch)
@@ -359,29 +436,33 @@ def animate(i):
     line7.set_data(xar, yar7)
     line8.set_data(xar, yar8)
 
-    ax1.set_xlim(0, i+1)
-    ax2.set_xlim(0, i+1)
-    ax3.set_xlim(0, i+1)
-    ax4.set_xlim(0, i+1)
+    ax1.set_xlim(0, i+0.8)
+    ax2.set_xlim(0, i+0.8)
+    ax3.set_xlim(0, i+0.8)
+    ax4.set_xlim(0, i+0.8)
+    
+    
 
-    land()
 
-# GUI set up
 topFrame = tk.Frame(root)
 topFrame.pack(side = tk.TOP)
 
 landButton = tk.Button(topFrame, text="Landing Sequence", command=drop)
+rotateButton= tk.Button(topFrame, text = "ROTATE", command = rotate)
 abortButton = tk.Button(topFrame, text='ABORT!', command= abort)
+powerButton = tk.Button(topFrame, text='PowerCycle', command= sendPowerCycle)
 plotcanvas = FigureCanvasTkAgg(fig, root)
 
 landButton.pack(side = tk.LEFT)
+rotateButton.pack(side = tk.LEFT)
 abortButton.pack(side= tk.RIGHT)
+powerButton.pack(side = tk.RIGHT)
 plotcanvas.get_tk_widget().pack()
-ani = animation.FuncAnimation(fig, animate, interval=1000, blit=False)
+ani = animation.FuncAnimation(fig, animate, interval=400, blit=False)
 
 root.mainloop()
 
-pwm_1.stop()
+pwm_1.stop()  
 pwm_2.stop()
 pwm_3.stop()
 pwm_4.stop()
