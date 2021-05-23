@@ -266,7 +266,7 @@ def capture_image(arucoDict,arucoParams, vid_stream,ground):
 		#Send an abort command, as the ground was reached
 		m = np.mean(frame)	
 		print(m)
-		if m < 40:
+		if m < 80:
 			#Check if the image is dark, which means craft is on the ground
 			ground = True
 			
