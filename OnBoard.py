@@ -310,7 +310,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 				
 				no_marker = False
 		frame_num += 1
-	if ground:
+	if ground == False:
 		x_out = -1
 		y_out = -1
 	return x_out, y_out
