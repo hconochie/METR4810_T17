@@ -24,7 +24,6 @@ from time import sleep
 
 #check if the camera thinks its on the ground
 global ground
-ground = False
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
