@@ -409,7 +409,7 @@ def getOrien():
 # ###Sending Data###
 def sendData(tempID, temp, pressureID, pressure):
     radio.stopListening()
-    time.sleep(0.25)
+    time.sleep(1/100)
     message = list(tempID) + list(temp)+ list(pressureID) + list(pressure)
     print("About to send message")
     print("message: ", message)
@@ -419,7 +419,7 @@ def sendData(tempID, temp, pressureID, pressure):
 
 def sendAccel(axID, ax, ayID, ay, azID, az):
     radio.stopListening()
-    time.sleep(0.25)
+    time.sleep(1/100)
     message = list(axID) + list(ax) + list(ayID) + list(ay) + list(azID) + list(az)
     print("About to send message")
     radio.write(message)
@@ -428,7 +428,7 @@ def sendAccel(axID, ax, ayID, ay, azID, az):
 
 def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
     radio.stopListening()
-    time.sleep(0.25)
+    time.sleep(1/100)
     message =list(rollID) + list(roll) + list(pitchID) + list(pitch) + list(yawID) + list(yaw)
     print("About to send message")
     radio.write(message)
@@ -437,7 +437,7 @@ def sendOdom(rollID, roll, pitchID, pitch, yawID, yaw):
 
 def sendLook(xPosID, xPos, yPosID, ypos):
     radio.stopListening()
-    time.sleep(0.25)
+    time.sleep(1/100)
     message = list(xPosID) + list(xPos) + list(yPosID) + list(yPos)
     print("About to send message")
     radio.write(message)
@@ -529,7 +529,7 @@ while True:
 	
     if ground == True:
         radio.stopListening()
-    	time.sleep(0.25)
+    	time.sleep(1/100)
     	message = list("ground")
     	print("About to send message")
     	radio.write(message)
