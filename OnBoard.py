@@ -21,10 +21,6 @@ import numpy as np
 import smbus
 from time import sleep
 
-
-#check if the camera thinks its on the ground
-global ground
-
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
@@ -250,7 +246,7 @@ def initialize_camera():
 	time.sleep(2)			
 	return arucoDict,arucoParams,vid_stream
 
-def capture_image(arucoDict,arucoParams, vid_stream):
+def capture_image(arucoDict,arucoParams, vid_stream,ground):
 	#Capture an image
 	start_x = vid_stream.camera.resolution[0]/2
 	start_y = vid_stream.camera.resolution[1]/2
@@ -312,7 +308,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 	if ground == False:
 		x_out = -1
 		y_out = -1
-	return x_out, y_out
+	return x_out, y_out, ground
 	
 def show_image(direction, vid_stream):
 	w = 480
@@ -407,6 +403,7 @@ def sendLook(xPosID, xPos, yPosID, ypos):
     radio.startListening()
 
 ####### MAIN LOOP #######
+ground = False
 while True:
     ackPL = [1]
     radio.writeAckPayload(1, ackPL, len(ackPL))
@@ -481,7 +478,7 @@ while True:
         GPIO.output(18, GPIO.LOW)
 
     if command == "LOOK":
-        x, y  = capture_image(arucoDict,arucoParams, vid_stream)
+        x, y, ground = capture_image(arucoDict,arucoParams, vid_stream,ground)
         xPos = str(round(x,3))
         yPos = str(round(y,3))
         #show_image(direction, vid_stream)
