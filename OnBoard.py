@@ -487,12 +487,12 @@ while True:
 	
     if ground == True:
         radio.stopListening()
-    	time.sleep(1/100)
-    	message = list("ground")
-    	print("About to send message")
-    	radio.write(message)
-    	print("send data to master")
-    	radio.startListening()
+        time.sleep(1/100)
+        message = list("ground")
+        print("About to send message")
+        radio.write(message)
+        print("send data to master")
+        radio.startListening()
 
     command = ""
 
