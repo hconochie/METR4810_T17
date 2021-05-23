@@ -308,6 +308,9 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 				
 				no_marker = False
 		frame_num += 1
+	if ground:
+		x_out = -1
+		y_out = -1
 	return x_out, y_out
 	
 def show_image(direction, vid_stream):
@@ -485,14 +488,6 @@ while True:
         yPosID = "_yPos_"
         sendLook(xPosID, xPos, yPosID, yPos)
 	
-    if ground == True:
-        radio.stopListening()
-        time.sleep(1/100)
-        message = list("ground")
-        print("About to send message")
-        radio.write(message)
-        print("send data to master")
-        radio.startListening()
 
     command = ""
 
