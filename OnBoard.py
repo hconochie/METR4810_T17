@@ -192,6 +192,10 @@ radio.startListening()
 
 
 #### Vision Functions ###
+#Vision Functions are partly adapted from:
+#https://www.pyimagesearch.com/2015/12/21/increasing-webcam-fps-with-python-and-opencv/
+#https://www.pyimagesearch.com/2020/12/21/detecting-aruco-markers-with-opencv-and-python/
+
 class PiVideoStream:
 	def __init__(self, resolution = (1216,1200), framerate = 30):
 		self.camera = PiCamera()
