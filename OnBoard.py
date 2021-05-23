@@ -219,8 +219,9 @@ class PiVideoStream:
 			self.rawCapture.truncate(0)
 
 			#Send an abort command, as the ground was reached
-			m = np.mean(self.frame)			
-			if m < 20:
+			m = np.mean(self.frame)	
+			print(m)
+			if m < 40:
 				#Check if the image is dark, which means craft is on the ground
 				ground = True
 			
