@@ -294,7 +294,7 @@ def capture_image(arucoDict,arucoParams, vid_stream):
 		#Check if the image is dark, which means craft is on the ground
 		m = np.mean(frame)
 		print(m)
-		if m > 200:
+		if m < 50:
 			return -1, -1
 		
 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
