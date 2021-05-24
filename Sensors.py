@@ -2,7 +2,16 @@ import smbus
 import time
 from time import sleep 
  
+### 
+# Distributed with a free-will license.
+# Use it any way you want, profit or free, provided it fits in the licenses of its associated works.
+# MPL3115A2
+# This code is designed to work with the MPL3115A2_I2CS I2C Mini Module available from ControlEverything.com.
+# https://shop.controleverything.com/products/precision-altimeter-500-to-1100-mbar#tabs-0-product_tabset-2
 # Get I2C bus
+# The MPL3115A2 initialisation code as been sourced from,
+# http://www.pibits.net/code/raspberry-pi-and-mpl3115a2-pressure-sensor.php
+###
 bus = smbus.SMBus(1)	
 
 # I2C address of the device
@@ -98,7 +107,13 @@ def read_pres():
 
 counter = 1
  
-
+'''
+The MPU initialsation code has been sourced from, 
+https://www.electronicwings.com/raspberry-pi/mpu6050-accelerometergyroscope-interfacing-with-raspberry-pi.
+        
+	Read Gyro and Accelerometer by Interfacing Raspberry Pi with MPU6050 using Python
+	http://www.electronicwings.com
+'''
 
 
 #some MPU6050 Registers and their Address
