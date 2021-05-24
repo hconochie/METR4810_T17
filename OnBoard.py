@@ -169,7 +169,7 @@ def read_raw_data(addr):
 
 MPU_Init()
 #### End sensor Init ####
-
+# The following code is the provided setup code for all NRF modules
 
 ###Radio Init###
 radio = NRF24(GPIO, spidev.SpiDev())
